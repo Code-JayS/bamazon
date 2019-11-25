@@ -17,13 +17,20 @@ var connection = mysql.createConnection({
 
 connection.connect(function (err) {
     if (err) throw err;
-   queryId();
+    listItems();
 });
 
 
 function listItems() {
-// catolog here // 
-queryId();
+    connection.query("SELECT * FROM products", function (err, res) {
+        if (err) throw err;
+        for (var i = 0; i < res.length; i++) {
+            console.log(res[i].item_id + " | " + res[i].product_name + " | " + res[i].price + " | " + res[i].stock_qty);
+        }
+        console.log("-----------------------------------");
+    });
+
+    queryId();
 }
 
 
@@ -57,7 +64,7 @@ function queryId() {
                 for (var i = 0; i < results.length; i++) {
                     if (results[i].product_name === answer.choice) {
                         chosenItem = results[i];
-                
+
                     }
                 }
                 if (chosenItem.stock_qty > parseInt(answer.amount)) {
