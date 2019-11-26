@@ -17,9 +17,45 @@ var connection = mysql.createConnection({
 
 connection.connect(function (err) {
     if (err) throw err;
-    listItems();
+    menu();
 });
 
+
+
+
+function menu() {
+    inquirer
+        .prompt({
+            name: "action",
+            type: "rawlist",
+            message: "What would you like to do?",
+            choices: [
+                "View all product inventory",
+                // "View all product below safety stock",
+                "Add to Inventory",
+                // "Add New Product",
+            ]
+        })
+        .then(function (answer) {
+            switch (answer.action) {
+                case "View all product inventory":
+                    listItems();
+                    break;
+
+                case "View all product below safety stock":
+                    listLowStock();
+                    break;
+
+                case "Add to Inventory":
+                    orderStock();
+                    break;
+
+                case "Add New Product":
+                    addProduct();
+                    break;
+            }
+        });
+}
 
 function listItems() {
     connection.query("SELECT * FROM products", function (err, res) {
@@ -30,11 +66,10 @@ function listItems() {
         console.log("-----------------------------------");
     });
 
-    queryId();
+    menu();
 }
 
-
-function queryId() {
+function orderStock() {
     connection.query("SELECT * FROM products", function (err, results) {
         if (err) throw err;
         // once you have the items, prompt the user for which they'd like to purchase
@@ -50,12 +85,12 @@ function queryId() {
                         }
                         return choiceArray;
                     },
-                    message: "What item would you like to buy?"
+                    message: "What item would you like to Update?"
                 },
                 {
                     name: "amount",
                     type: "input",
-                    message: "How many would you like to buy?"
+                    message: "How much would like to add?"
                 }
             ])
             .then(function (answer) {
@@ -67,9 +102,9 @@ function queryId() {
 
                     }
                 }
-                if (chosenItem.stock_qty > parseInt(answer.amount)) {
+                if (chosenItem) {
                     //there is enough in stock so update db.
-                    var newStock = chosenItem.stock_qty -= answer.amount
+                    var newStock = chosenItem.stock_qty += parseInt(answer.amount)
                     connection.query(
                         "UPDATE products SET ? WHERE ?",
                         [
@@ -82,17 +117,16 @@ function queryId() {
                         ],
                         function (error) {
                             if (error) throw err;
-                            console.log("Thank You for your order!\n\n");
-                            listItems();
+                            console.log("Thank You warehouse has been updated!\n\n");
+                            menu();
                         }
                     );
                 }
                 else {
                     // not enough in stock, so apologize and start over
-                    console.log("There is not enough in stock, please retry your order with a lower quantity.\n\n");
-                    listItems();
+                    console.log("please enter a valid amount.\n\n");
+                    menu();
                 }
             });
     });
-
 }
